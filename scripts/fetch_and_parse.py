@@ -36,4 +36,8 @@ except Exception as e:
     print(f"Error calling OpenAI API: {e}", file=sys.stderr)
     sys.exit(2)
 
+# Save to latest_results.json
+with open("latest_results.json", "w", encoding="utf-8") as f:
+    json.dump({"parsed": parsed}, f, ensure_ascii=False, indent=2)
+
 print(json.dumps({"parsed": parsed}, ensure_ascii=False)) 
