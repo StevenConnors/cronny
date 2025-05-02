@@ -22,20 +22,40 @@ jobs:
       - env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: python scripts/fetch_and_parse.py --input inputs.json
+
+      - name: Check for changes
+        id: changes
+        run: |
+          if [ -f changes.json ]; then
+            echo "changes=true" >> $GITHUB_OUTPUT
+          else
+            echo "changes=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create GitHub issues for changes
+        if: steps.changes.outputs.changes == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const changes = JSON.parse(fs.readFileSync('changes.json', 'utf-8'));
+            let body = '';
+            for (const change of changes) {
+              body += `- **Topic:** ${change.topic}\n  **URL:** ${change.url}\n  **Change:** ${change.title}\n\n`;
+            }
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: 'Web Scraper: Updates Detected',
+              body: body
+            });
+
       - name: Commit and push latest results
+        if: steps.changes.outputs.changes == 'true'
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add latest_results.json
           git commit -m "Update latest results [skip ci]" || echo "No changes to commit"
           git push
-      - name: Create test GitHub issue
-        uses: actions/github-script@v7
-        with:
-          script: |
-            await github.rest.issues.create({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              title: "Hi",
-              body: "This is a test issue."
-            }) 
+    
