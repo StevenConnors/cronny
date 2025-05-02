@@ -4,6 +4,7 @@ import json
 import sys
 from dotenv import load_dotenv
 import argparse
+from bs4 import BeautifulSoup
 
 load_dotenv(dotenv_path=".env.local")
 
@@ -32,8 +33,13 @@ for entry in input_data:
         continue
     try:
         html = requests.get(URL, timeout=30).text
+        # Clean HTML: remove script, style, noscript tags
+        soup = BeautifulSoup(html, "html.parser")
+        for tag in soup(["script", "style", "noscript"]):
+            tag.decompose()
+        cleaned_text = soup.get_text(separator=" ", strip=True)
     except Exception as e:
-        print(f"Error fetching URL {URL}: {e}", file=sys.stderr)
+        print(f"Error fetching or cleaning URL {URL}: {e}", file=sys.stderr)
         continue
 
     try:
@@ -44,7 +50,7 @@ for entry in input_data:
                 "model": "gpt-4.1-nano",
                 "messages": [
                     {"role": "system", "content": f"Extract news about {TOPIC}. Keep the original language. Since the input text is HTML, make sure to remove any unnecessary tags or scripts so that the result is pure human readable text."},
-                    {"role": "user", "content": html}
+                    {"role": "user", "content": cleaned_text}
                 ],
                 "max_tokens": 300
             },
