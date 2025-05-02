@@ -20,7 +20,7 @@ jobs:
       - run: pip install -r requirements.txt
       - env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-        run: python scripts/fetch_and_parse.py 
+        run: python scripts/fetch_and_parse.py --input inputs.json
       - name: Commit and push latest results
         run: |
           git config --global user.name "github-actions[bot]"
@@ -34,7 +34,7 @@ jobs:
           script: |
             github.issues.create({
               owner: context.repo.owner,
-              repo: contcanext.repo.repo,
+              repo: context.repo.repo,
               title: "Hi",
               body: "This is a test issue."
             }) 
