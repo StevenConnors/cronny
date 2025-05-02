@@ -40,13 +40,14 @@ jobs:
             const fs = require('fs');
             const changes = JSON.parse(fs.readFileSync('changes.json', 'utf-8'));
             let body = '';
+            const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
             for (const change of changes) {
               body += `- **Topic:** ${change.topic}\n  **URL:** ${change.url}\n  **Change:** ${change.title}\n\n`;
             }
             await github.rest.issues.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              title: 'Web Scraper: Updates Detected',
+              title: `(${today}) Web Scraper: Updates Detected`,
               body: body
             });
 
